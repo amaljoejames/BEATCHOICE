@@ -1,0 +1,48 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id          String     @id @default(uuid())
+  email       String     @unique  // Ensures unique emails
+  provider    Provider
+  streams     Stream[]
+  upvotes     Upvotes[]
+}
+
+model Stream {
+  id                 String     @id @default(uuid())
+  type               StreamType
+  url                String
+  extractedId        String
+  title              String?    @default("")  // Set as optional if it might be empty
+  smallImg           String?    @default("")  // Set as optional if it might be empty
+  bigImg             String?    @default("")  // Set as optional if it might be empty
+  active             Boolean    @default(true)
+  upvotes            Upvotes[]
+  userId             String
+  user               User       @relation(fields: [userId], references: [id])
+}
+
+model Upvotes {
+  id          String     @id @default(uuid())
+  userId      String
+  streamId    String
+  user        User       @relation(fields: [userId], references: [id])
+  stream      Stream     @relation(fields: [streamId], references: [id])
+  @@unique([userId, streamId]) // Composite unique constraint for user and stream
+}
+
+enum StreamType {
+  Spotify
+  Youtube
+}
+
+enum Provider {
+  Google
+}
